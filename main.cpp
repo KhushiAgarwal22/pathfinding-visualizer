@@ -52,7 +52,19 @@ int main()
         while(window.pollEvent(evnt)){
             if(evnt.type == evnt.Closed){
                 window.close();
-            }   
+            } 
+            if(evnt.type==Event::MouseButtonPressed && evnt.mouseButton.button==Mouse::Left){
+                int x = evnt.mouseButton.x;
+                int y = evnt.mouseButton.y;
+                int row=y/10;
+                int col = x/10;
+                if(grid[row][col] == 0 && (row < 60 && col < 60)){
+                    grid[row][col] = 1;
+                }
+                else if(grid[row][col] == 1 && (row < 60 && col < 60)){
+                    grid[row][col] = 0;
+                }
+            }  
         }
 
         

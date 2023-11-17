@@ -7,16 +7,27 @@ using namespace sf;
 
 
 int main()
-{
+{   
+    int filled[60][60];
+    int grid[60][60];
+
+
     RenderWindow window(VideoMode(1000,600),"Grid");
 
     RectangleShape rectangle(Vector2f(10,10));   //White grid box
     rectangle.setFillColor(Color::White);
-    RectangleShape brectangle(Vector2f(10,10));     //Black box for border
-    brectangle.setFillColor(Color::Black);
+    RectangleShape blackRectangle(Vector2f(10,10));     //Black box for border
+    blackRectangle.setFillColor(Color::Black);
+    RectangleShape redRectangle(Vector2f(10,10));   //destination grid box
+    redRectangle.setFillColor(Color::Red);
+    redRectangle.setOutlineThickness(2);
+    redRectangle.setOutlineColor(Color::Blue);
+    RectangleShape blueRectangle(Vector2f(10,10)); // source grid box
+    blueRectangle.setFillColor(Color::Green);
+    blueRectangle.setOutlineThickness(2);
+    blueRectangle.setOutlineColor(Color::Black);
 
-    int grid[60][60];
-
+    int source_x=2,source_y=2,dest_x=50,dest_y=56;      //Origin(2,3)->Goal(50,56)
 
 
     for(int i = 0;i<60;i++){
@@ -44,6 +55,8 @@ int main()
             }   
         }
 
+        
+
         for(int i = 0;i<=590;i+=10){
             for(int j = 0;j<=590;j+=10){
                 //adding the default white cells
@@ -54,16 +67,23 @@ int main()
                     window.draw(rectangle);   
 
                 }
-                
+                //adding black border cells
                 else if(grid[i/10][j/10] == 0){
-                    brectangle.setOutlineThickness(2);
-                    brectangle.setOutlineColor(Color::Red);
-                    brectangle.setPosition(j,i);
-                    window.draw(brectangle);
+                    blackRectangle.setOutlineThickness(2);
+                    blackRectangle.setOutlineColor(Color::Red);
+                    blackRectangle.setPosition(j,i);
+                    window.draw(blackRectangle);
                 }
                 
             }
         }
+
+        blueRectangle.setPosition(source_y*10,source_x*10);
+        window.draw(blueRectangle);     //source
+        filled[source_x][source_y]=1;
+        redRectangle.setPosition(dest_y*10,dest_x*10);
+        window.draw(redRectangle);        //destination
+        filled[dest_x][dest_y]=1;
 
         window.display();
 

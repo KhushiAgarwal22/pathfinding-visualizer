@@ -8,9 +8,91 @@ using namespace sf;
 
 //Global Variables for the entire program
 RenderWindow window(VideoMode(1000,600),"Grid");
+bool ranBFS = false;
+string BFSpath = "For BFS Press : 1 ";
+#define num 60      //number of cells in a row
 
 
-//Breadth First Algorithm using queue
+
+//Djikstra Algorithm
+//--------Dijkstra--------
+vector<pair<int,int> > pathD;        //Shortest pathD
+bool sptSet[num][num];      //explored cells
+void findmin(float dist[num][num],int& min_x,int& min_y){
+    float mini=FLT_MAX;
+    for(int i=0;i<num;i++)
+        for(int j=0;j<num;j++)
+            if(sptSet[i][j]==false && dist[i][j]<mini){
+                mini=dist[i][j];
+                min_x=i;
+                min_y=j;
+            }
+}
+void findpath(pair<int,int> previous[num][num],float dist[num][num],int dest_x,int dest_y,int source_x,int source_y){
+    cout<<"\nLength of Dijkstra path is: "<<dist[dest_x][dest_y]<<endl;
+    while(previous[dest_x][dest_y].first!=source_x || previous[dest_x][dest_y].second!=source_y){        // both simultaneously equal to source coordinates
+        sf::sleep(milliseconds(10));        //delay shortest pathD
+        int x = previous[dest_x][dest_y].first;
+        int y = previous[dest_x][dest_y].second;    
+        cout << "Visiting x = " << previous[dest_x][dest_y].first << "  " << "and y = " << previous[dest_x][dest_y].second << endl;
+        RectangleShape yellowRectangle(Vector2f(10,10));
+        yellowRectangle.setFillColor(Color::Magenta);
+        yellowRectangle.setOutlineThickness(1);
+        yellowRectangle.setOutlineColor(Color::Red);
+        yellowRectangle.setPosition(y*10,x*10);
+        window.draw(yellowRectangle);
+        window.display();
+        pathD.push_back(make_pair(previous[dest_x][dest_y].first,previous[dest_x][dest_y].second));
+        int save_x=dest_x,save_y=dest_y;
+        dest_x=previous[save_x][save_y].first;
+        dest_y=previous[save_x][save_y].second;
+    }
+    sleep(seconds(5));
+}
+void dijkstra(int source_x,int source_y,int dest_x,int dest_y,int grid[num][num]){
+    pair<int,int> previous[num][num];
+    float dist[num][num];
+    for(int i=0;i<num;i++)
+        for(int j=0;j<num;j++)
+            dist[i][j]=FLT_MAX;
+    dist[source_x][source_y]=0.0;
+    int found=0;
+    for(int i=0;i<num && found==0;i++) {
+        for(int j=0;j<num && found==0;j++){
+            int min_x=0,min_y=0;
+            findmin(dist,min_x,min_y);
+            sptSet[min_x][min_y]=true;
+            if(sptSet[dest_x][dest_y]==true){
+                found=1;
+                break;
+            }
+            sf::sleep(milliseconds(1));        //delay exploration
+            int possibleX[] = {0, 0, 1, -1, 1, -1, -1, 1};
+            int possibleY[] = {1, -1, 0, 0, 1, 1, -1, -1};
+
+            for(int i = 0; i < 8; ++i) {
+                int newRow = min_x + possibleX[i];
+                int newCol = min_y + possibleY[i];
+                RectangleShape yellowRectangle(Vector2f(10,10));
+                yellowRectangle.setFillColor(Color::Yellow);
+                yellowRectangle.setOutlineThickness(1);
+                yellowRectangle.setOutlineColor(Color::Red);
+                yellowRectangle.setPosition(min_y*10,min_x*10);
+                window.draw(yellowRectangle);
+                window.display();
+                if(grid[newRow][newCol]==1 && sptSet[newRow][newCol]==false && dist[newRow][newCol]>dist[min_x][min_y]+1.0){
+                dist[newRow][newCol]=dist[min_x][min_y]+1.0;
+                previous[newRow][newCol]=make_pair(min_x,min_y);
+                }
+            }
+        }
+    }
+        
+    findpath(previous,dist,dest_x,dest_y,source_x,source_y);
+}
+
+
+//Breadth First Algorithm
 
 // Direction vectors
 int dRow[] = { -1, 0, 1, 0 };
@@ -60,12 +142,19 @@ void BFS(int grid[][60], bool vis[60][60],int filled[][60],
         int x = cell.first;
         int y = cell.second;
 
-        cout << grid[x][y] << " ";
+        //cout << grid[x][y] << " ";
         
         filled[x][y] = 1;
 
         if(x != row || y != col){
             RectangleShape yellowRectangle(Vector2f(10,10));
+            sf::Clock clock;
+
+            if (clock.getElapsedTime().asMilliseconds() >= 10) {
+                // Update visualization code here
+                clock.restart();
+            }
+
             yellowRectangle.setFillColor(Color::Yellow);
             yellowRectangle.setOutlineThickness(1);
             yellowRectangle.setOutlineColor(Color::Red);
@@ -82,6 +171,7 @@ void BFS(int grid[][60], bool vis[60][60],int filled[][60],
             while(prev_cell[{x,y}].first != row || prev_cell[{x,y}].second != col ){
                 x = prev_cell[{x,y}].first;
                 y = prev_cell[{x,y}].second;
+
                 RectangleShape magentaRectangle(Vector2f(10,10));
                 magentaRectangle.setFillColor(Color::Magenta);
                 magentaRectangle.setOutlineThickness(1);
@@ -92,8 +182,13 @@ void BFS(int grid[][60], bool vis[60][60],int filled[][60],
                 window.draw(magentaRectangle);
                 window.display();
             }
-            cout << "BFS Shortest length : " << shortestLength;
-            sf::sleep(seconds(10));
+            shortestLength--;
+            cout << "BFS Shortest length : " << shortestLength << endl;
+            ranBFS = true;
+            sleep(milliseconds(10));
+            for(int i = 0;i<5000;i++){
+                sleep(milliseconds(1));
+            }
             return;
         }
         // Go to the adjacent cells
@@ -146,6 +241,8 @@ int main()
     sf::Font font;
     font.loadFromFile("Pixeled.ttf");
     sf::Text text1("Pathfinding Visualizer",font,20);
+    Text text2(BFSpath,font, 18);
+    
     
 
 
@@ -195,6 +292,7 @@ int main()
                 }
 
             }
+
             //adding source grid box
             if(evnt.type == Event::KeyPressed && evnt.key.code == Keyboard::S){
                 int mouse_x = Mouse::getPosition(window).x;
@@ -202,7 +300,7 @@ int main()
                 cout << mouse_x << " " <<mouse_y << endl;
                 source_x=mouse_y/10;
                 source_y = mouse_x/10;
-                cout << "You tried to enter source grid box.";
+                //cout << "You tried to enter source grid box.";
                 
             }
             //adding destination grid box
@@ -212,12 +310,29 @@ int main()
                 cout << mouse_x << " " <<mouse_y << endl;
                 dest_x=mouse_y/10;
                 dest_y = mouse_x/10;
-                cout << "You tried to enter dest grid box.";
+                //cout << "You tried to enter dest grid box.";
             }
 
             //BFS keybind
-            if(evnt.type == Event::KeyPressed && evnt.key.code == Keyboard::B){
+            if(evnt.type == Event::KeyPressed && evnt.key.code == Keyboard::Num1){
+                for(int i = 0;i<60;i++){
+                    for(int j = 0;j<60;j++){
+                        visited[i][j] = false;
+                        filled[i][j] = 0;
+                    }
+                }
                 BFS(grid,visited,filled,source_x,source_y,dest_x,dest_y);
+                cout << "Function call has ended";
+            }
+            if(evnt.type == Event::KeyPressed && evnt.key.code == Keyboard::Num2){
+                for(int i = 0;i<60;i++){
+                    for(int j = 0;j<60;j++){
+                        visited[i][j] = false;
+                        filled[i][j] = 0;
+                    }
+                }
+                dijkstra(source_x,source_y,dest_x,dest_y,grid);
+                cout << "Function call has ended";
             }
 
         }
@@ -241,17 +356,21 @@ int main()
                     window.draw(blackRectangle);
                 }
                 //cells explored by bfs
+                /*
                 if(filled[i/10][j/10] == 1){
                     yellowRectangle.setOutlineThickness(1);
                     yellowRectangle.setOutlineColor(Color::Red);
                     yellowRectangle.setPosition(j,i);
                     window.draw(yellowRectangle);
                 }
+                */
                 
             }
         }
+        text2.setPosition(620,50);
         text1.setPosition(620,10);       //Pathfinder Text Header
         window.draw(text1);
+        window.draw(text2);
         GreenRectangle.setPosition(source_y*10,source_x*10);
         window.draw(GreenRectangle);     //source
         //filled[source_x][source_y]=1;

@@ -10,9 +10,10 @@ using namespace sf;
 RenderWindow window(VideoMode(1000,600),"Grid");
 bool ranBFS = false;
 string BFSpath = "For BFS Press : 1 ";
-#define num 60      //number of cells in a row
+string dijkstraText = "For Dijkstra Press : 2 ";
+string DFSText = "For DFS Press : 3 ";
 
-
+#define num 60 
 
 //Djikstra Algorithm
 //--------Dijkstra--------
@@ -207,6 +208,97 @@ void BFS(int grid[][60], bool vis[60][60],int filled[][60],
     }
 }
 
+
+//Depth First Search
+// Function to check if mat[row][col]
+// is unvisited and lies within the
+// boundary of the given matrix
+
+#define ROW 60
+#define COL 60
+
+bool isValid(int grid[][COL],bool vis[][COL], int row, int col)
+{
+    // If cell is out of bounds
+    if (row <= 0 || col <= 0 || row >= ROW-1 || col >= COL-1)
+        return false;
+
+    // If the cell is already visited
+    if (vis[row][col])
+        return false;
+    
+    if (grid[row][col] == 0) return false;
+
+    // Otherwise, it can be visited
+    return true;
+}
+
+// Function to perform DFS Traversal on the matrix grid[]
+void DFS(int row, int col, int grid[][COL], bool vis[][COL], vector<pair<int, int>> &path,int dest_x,int dest_y)
+{
+    // Initialize a stack of pairs and push the starting cell into it
+    stack<pair<int, int>> st;
+    st.push({row, col});
+
+    // Iterate until the stack is not empty
+    while (!st.empty())
+    {
+        // Pop the top pair
+        pair<int, int> curr = st.top();
+        st.pop();
+        int row = curr.first;
+        int col = curr.second;
+
+        // Check if the current popped cell is a valid cell or not
+        if (!isValid(grid,vis, row, col))
+            continue;
+
+        // Mark the current cell as visited
+        vis[row][col] = true;
+        sleep(milliseconds(10));
+        RectangleShape yellowRectangle(Vector2f(10,10));
+        yellowRectangle.setFillColor(Color::Yellow);
+        yellowRectangle.setOutlineThickness(1);
+        yellowRectangle.setOutlineColor(Color::Red);
+        yellowRectangle.setPosition(col*10,row*10);
+        window.draw(yellowRectangle);
+        window.display();
+        
+        if(row == dest_x && col == dest_y){
+            return;
+        }
+
+        // Push all the adjacent cells
+
+
+        for (int i = 0; i < 4; i++)
+        {
+            int adjx = row + dRow[i];
+            int adjy = col + dCol[i];
+            st.push({adjx, adjy});
+        }
+
+        // Store the current cell in the path
+        path.push_back({row, col});
+    }
+}
+
+// Function to find the shortest path using DFS
+vector<pair<int, int>> findShortestPath(int startRow, int startCol, int grid[][COL],int dest_x,int dest_y)
+{
+    // Stores whether the current cell is visited or not
+    bool vis[ROW][COL];
+    memset(vis, false, sizeof vis);
+
+    vector<pair<int, int>> path;
+
+    // Perform DFS
+    DFS(startRow, startCol, grid, vis, path,dest_x,dest_y);
+
+    return path;
+}
+
+
 int main()
 {   
     int filled[60][60];
@@ -242,6 +334,8 @@ int main()
     font.loadFromFile("Pixeled.ttf");
     sf::Text text1("Pathfinding Visualizer",font,20);
     Text text2(BFSpath,font, 18);
+    Text text3(dijkstraText,font,18);
+    Text text4(DFSText,font,18);
     
     
 
@@ -315,6 +409,7 @@ int main()
 
             //BFS keybind
             if(evnt.type == Event::KeyPressed && evnt.key.code == Keyboard::Num1){
+                //cout << "Running BFS";
                 for(int i = 0;i<60;i++){
                     for(int j = 0;j<60;j++){
                         visited[i][j] = false;
@@ -332,6 +427,32 @@ int main()
                     }
                 }
                 dijkstra(source_x,source_y,dest_x,dest_y,grid);
+                cout << "Function call has ended";
+            }
+
+            if(evnt.type == Event::KeyPressed && evnt.key.code == Keyboard::Num3){
+                //cout << "Running DFS";
+                for(int i = 0;i<60;i++){
+                    for(int j = 0;j<60;j++){
+                        visited[i][j] = false;
+                        filled[i][j] = 0;
+                    }
+                }
+                vector<pair<int,int>> v1 = findShortestPath(source_x,source_y,grid,dest_x,dest_y);
+                while(!v1.empty()){
+                    pair<int,int> p1 = v1.back();
+                    RectangleShape magentaRectangle(Vector2f(10,10));
+                    magentaRectangle.setFillColor(Color::Magenta);
+                    magentaRectangle.setOutlineThickness(1);
+                    magentaRectangle.setOutlineColor(Color::Red);
+                    magentaRectangle.setPosition(p1.second*10,p1.first*10);
+                    sf::sleep(milliseconds(10));
+                    window.draw(magentaRectangle);
+                    window.display();
+                    v1.pop_back();
+                    
+
+                }
                 cout << "Function call has ended";
             }
 
@@ -369,8 +490,12 @@ int main()
         }
         text2.setPosition(620,50);
         text1.setPosition(620,10);       //Pathfinder Text Header
+        text3.setPosition(620,90);
+        text4.setPosition(620,130);
         window.draw(text1);
         window.draw(text2);
+        window.draw(text3);
+        window.draw(text4);
         GreenRectangle.setPosition(source_y*10,source_x*10);
         window.draw(GreenRectangle);     //source
         //filled[source_x][source_y]=1;
